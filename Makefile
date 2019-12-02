@@ -5,22 +5,54 @@
 
 include $(TOPDIR)/rules.mk
 
-LUCI_TITLE:=LuCI support for serverchan
-LUCI_DEPENDS:=+iputils-arping +curl 
-LUCI_PKGARCH:=all
 PKG_NAME:=luci-app-serverchan
 PKG_VERSION:=1.0
-PKG_RELEASE:=40
+PKG_RELEASE:=50
 
-include $(TOPDIR)/feeds/luci/luci.mk
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
-define Package/$(PKG_NAME)/postinst
+include $(INCLUDE_DIR)/package.mk
+
+define Package/luci-app-serverchan
+	SECTION:=luci
+	CATEGORY:=LuCI
+	SUBMENU:=3. Applications
+	TITLE:=LuCI Support for serverchan on or off
+	DEPENDS:=+iputils-arping +curl
+endef
+
+define Package/luci-app-serverchan/description
+	LuCI support for serverchan
+endef
+
+define Build/Prepare
+endef
+
+define Build/Compile
+endef
+
+define Package/luci-app-serverchan/install
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci
+	cp -pR ./luasrc/* $(1)/usr/lib/lua/luci
+	$(INSTALL_DIR) $(1)/
+	cp -pR ./root/* $(1)/
+endef
+
+define Package/luci-app-serverchan/postinst
 #!/bin/sh
-chmod 0755 /etc/init.d/serverchan
-chmod 0755 /usr/bin/serverchan/serverchan
-/etc/init.d/serverchan enable >/dev/null 2>&1
+	chmod 755 $${IPKG_INSTROOT}/etc/init.d/serverchan >/dev/null 2>&1
+	chmod 755 $${IPKG_INSTROOT}/usr/bin/serverchan/serverchan >/dev/null 2>&1
+	/etc/init.d/serverchan enable >/dev/null 2>&1
 exit 0
 endef
 
-# call BuildPackage - OpenWrt buildroot signature
+define Package/luci-app-serverchan/prerm
+#!/bin/sh
+if [ -z "$${IPKG_INSTROOT}" ]; then
+     /etc/init.d/serverchan disable
+     /etc/init.d/serverchan stop
+fi
+exit 0
+endef
 
+$(eval $(call BuildPackage,luci-app-serverchan))
